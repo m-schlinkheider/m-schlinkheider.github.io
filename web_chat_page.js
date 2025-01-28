@@ -21,6 +21,10 @@ async function sendMessage(message) {
     Authorization: `Bearer ${apiKey}`,
   };
 
+  console.log('API Key:', apiKey);
+  console.log('URL:', url);
+  console.log('Headers:', headers);  
+
   const body = JSON.stringify({
     model: 'gpt-4o',
     messages: [
