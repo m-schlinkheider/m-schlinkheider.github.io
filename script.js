@@ -73,12 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 break;
                 case 'chat':
-                    sectionContent = `
-                        <section class="tab-section">
-                            <h2>Chat mit MarcelGPT</h2>
-                            <p>Stellen Sie mir eine Frage oder wählen Sie einen Vorschlag!</p>
-                        </section>
-                    `;
                     break;    
         }
 
