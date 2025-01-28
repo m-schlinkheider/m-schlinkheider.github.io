@@ -106,5 +106,6 @@ const suggestions = [
   }
   
   // Run the chat initialization
+  document.addEventListener('DOMContentLoaded', () => {  
   initChat();
-  
+});
