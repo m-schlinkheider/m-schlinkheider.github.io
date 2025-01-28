@@ -12,6 +12,17 @@ let showSuggestions = true;
 // Global DOM Elements
 let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refreshButton;
 
+// Funktion zum Senden von Nachrichten an OpenAI
+async function sendOpenAIRequest(message) {
+  try {
+    const response = await sendMessage(message); // Aufruf der Funktion aus openai_service_web.js
+    return response;
+  } catch (error) {
+    console.error('Fehler bei der OpenAI API Anfrage:', error);
+    throw new Error('Fehler beim Abrufen der Antwort von OpenAI.');
+  }
+}
+
 // Render messages dynamically
 function renderMessages() {
   if (!chatBox) {
@@ -79,13 +90,13 @@ async function sendMessage() {
 }
 
 // Simulate OpenAI API request
-async function sendOpenAIRequest(message) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve('Dies ist eine Beispielantwort des Chatbots.');
-    }, 1000);
-  });
-}
+// async function sendOpenAIRequest(message) {
+//  return new Promise((resolve) => {
+//    setTimeout(() => {
+//      resolve('Dies ist eine Beispielantwort des Chatbots.');
+//    }, 1000);
+//  });
+// }
 
 // Refresh the chat
 function refreshChat() {
