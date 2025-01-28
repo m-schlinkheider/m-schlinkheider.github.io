@@ -21,10 +21,6 @@ async function sendMessage(message) {
     Authorization: `Bearer ${apiKey}`,
   };
 
-  console.log('API Key:', apiKey);
-  console.log('URL:', url);
-  console.log('Headers:', headers);  
-
   const body = JSON.stringify({
     model: 'gpt-4o',
     messages: [
@@ -40,6 +36,11 @@ async function sendMessage(message) {
     stop: null,
     temperature: 0.7,
   });
+
+  console.log('API Key:', apiKey);
+  console.log('URL:', url);
+  console.log('Headers:', headers);
+  console.log('Request Body:', body);  
 
   try {
     const response = await fetch(url, {
