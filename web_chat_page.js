@@ -22,7 +22,7 @@ async function sendMessage(message) {
   };
 
   const body = JSON.stringify({
-    model: 'gpt-4o',
+    model: 'gpt-3.5-turbo',
     messages: [
       {
         role: 'system',
