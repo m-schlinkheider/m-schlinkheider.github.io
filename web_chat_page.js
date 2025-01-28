@@ -29,8 +29,9 @@ const suggestions = [
   
   // Render suggestions dynamically
   function renderSuggestions() {
+    const suggestionsContainer = document.getElementById('suggestions');
+    suggestionsContainer.innerHTML = '';
     if (showSuggestions) {
-      suggestionsContainer.innerHTML = '';
       suggestions.forEach((suggestion) => {
         const suggestionButton = document.createElement('button');
         suggestionButton.textContent = suggestion;
