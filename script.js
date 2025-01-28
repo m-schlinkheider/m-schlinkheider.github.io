@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
         { id: 'faehigkeiten', label: 'Fähigkeiten', icon: 'star' },
         { id: 'berufspraxis', label: 'Berufspraxis', icon: 'work' },
         { id: 'bildung', label: 'Bildung', icon: 'school' },
-        { id: 'projekte', label: 'Projekte', icon: 'folder' }
+        { id: 'projekte', label: 'Projekte', icon: 'folder' },
+        { id: 'chat', label: 'Chat', icon: 'chat' }
     ];
 
     const contentDiv = document.querySelector('.content');
@@ -71,6 +72,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     </section>
                 `;
                 break;
+                case 'chat':
+                    sectionContent = `
+                        <section class="tab-section">
+                            <h2>Chat mit MarcelGPT</h2>
+                            <p>Stellen Sie mir eine Frage oder wählen Sie einen Vorschlag!</p>
+                            
+                            <!-- Chatbox -->
+                            <div id="chat-box" class="border rounded p-3 mb-3" style="height: 300px; overflow-y: auto; background-color: #f8f9fa;"></div>
+                            
+                            <!-- Vorschläge -->
+                            <div id="suggestions" class="d-flex flex-wrap justify-content-center mb-3"></div>
+                            
+                            <!-- Ladeanzeige -->
+                            <div id="loading-indicator" class="text-center mb-3" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+        
+                            <!-- Eingabebereich -->
+                            <div class="d-flex">
+                                <input type="text" id="chat-input" class="form-control me-2" placeholder="Nachricht eingeben..." />
+                                <button id="send-button" class="btn btn-primary">Senden</button>
+                            </div>
+        
+                            <!-- Refresh Button -->
+                            <div class="text-center mt-3">
+                                <button id="refresh-button" class="btn btn-secondary">Chat zurücksetzen</button>
+                            </div>
+                        </section>
+                    `;
+                    break;    
         }
 
         tabContent.innerHTML = sectionContent;
@@ -359,6 +392,59 @@ function generateProjectsSection(projects) {
         });
         html += '</div>';
     }
+// Dynamische Chat-Logik
+let messages = [];
+let isLoading = false;
+
+function renderMessages() {
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML = '';
+    messages.forEach((msg) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = msg.content;
+        messageDiv.className = msg.role === 'user' ? 'text-end text-dark mb-2' : 'text-start text-primary mb-2';
+        chatBox.appendChild(messageDiv);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendMessage() {
+    const chatInput = document.getElementById('chat-input');
+    const userMessage = chatInput.value.trim();
+    if (!userMessage || isLoading) return;
+
+    messages.push({ role: 'user', content: userMessage });
+    chatInput.value = '';
+    renderMessages();
+
+    isLoading = true;
+    document.getElementById('loading-indicator').style.display = 'block';
+
+    // Simulierte API-Antwort
+    setTimeout(() => {
+        const botReply = 'Dies ist eine Beispielantwort des Chatbots.';
+        messages.push({ role: 'assistant', content: botReply });
+        isLoading = false;
+        document.getElementById('loading-indicator').style.display = 'none';
+        renderMessages();
+    }, 1000);
+}
+
+// Event-Listener für Senden-Button
+document.addEventListener('click', (event) => {
+    if (event.target.id === 'send-button') {
+        sendMessage();
+    }
+});
+
+// Event-Listener für Vorschläge
+document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('suggestion')) {
+        const chatInput = document.getElementById('chat-input');
+        chatInput.value = event.target.textContent;
+        sendMessage();
+    }
+});    
 
     return html;
 }
