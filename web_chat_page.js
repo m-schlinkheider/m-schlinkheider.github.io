@@ -9,26 +9,55 @@ let messages = []; // Stores messages as {role: 'user' or 'assistant', content: 
 let isLoading = false;
 let showSuggestions = true;
 
-// Global DOM Elements
 let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refreshButton;
 
 // Funktion zum Senden von Nachrichten an OpenAI
-async function sendOpenAIRequest(message) {
+async function sendMessage(message) {
+  const apiKey = '<YOUR_API_KEY>'; // Ersetze dies mit deinem OpenAI-API-Schlüssel
+  const url = 'https://api.openai.com/v1/chat/completions';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  const body = JSON.stringify({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Du bist Marcel Schlinkheider. Antworte auf Anfragen, als würdest du die Fragen selbst beantworten, und gebe dabei die gleiche Perspektive und den gleichen Ton wieder, den die Person verwenden würde.',
+      },
+      { role: 'user', content: message },
+    ],
+    max_tokens: 150,
+    n: 1,
+    stop: null,
+    temperature: 0.7,
+  });
+
   try {
-    const response = await sendMessage(message); // Aufruf der Funktion aus openai_service_web.js
-    return response;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: body,
+    });
+
+    if (response.ok) {
+      const jsonResponse = await response.json();
+      return jsonResponse.choices[0].message.content.trim();
+    } else {
+      throw new Error(`Fehler bei der OpenAI API Anfrage: ${response.status}`);
+    }
   } catch (error) {
-    console.error('Fehler bei der OpenAI API Anfrage:', error);
-    throw new Error('Fehler beim Abrufen der Antwort von OpenAI.');
+    console.error('Error:', error);
+    throw error;
   }
 }
 
 // Render messages dynamically
 function renderMessages() {
-  if (!chatBox) {
-    console.error('Element mit der ID "chat-box" wurde nicht gefunden.');
-    return;
-  }
   chatBox.innerHTML = ''; // Clear existing messages
   messages.forEach((message) => {
     const messageElement = document.createElement('div');
@@ -41,10 +70,6 @@ function renderMessages() {
 
 // Render suggestions dynamically
 function renderSuggestions() {
-  if (!suggestionsContainer) {
-    console.error('Element mit der ID "suggestions" wurde nicht gefunden.');
-    return;
-  }
   suggestionsContainer.innerHTML = ''; // Clear existing suggestions
   if (showSuggestions) {
     suggestions.forEach((suggestion) => {
@@ -52,24 +77,21 @@ function renderSuggestions() {
       suggestionButton.textContent = suggestion;
       suggestionButton.className = 'suggestion';
       suggestionButton.addEventListener('click', () => {
-        if (!chatInput) {
-          console.error('Element mit der ID "chat-input" wurde nicht gefunden.');
-          return;
-        }
         chatInput.value = suggestion;
-        sendMessage();
+        sendUserMessage();
       });
       suggestionsContainer.appendChild(suggestionButton);
     });
   }
 }
 
-// Send message to OpenAI
-async function sendMessage() {
-  const text = chatInput.value.trim();
-  if (!text || isLoading) return;
+// Send user message and handle bot response
+async function sendUserMessage() {
+  const userMessage = chatInput.value.trim();
+  if (!userMessage || isLoading) return;
 
-  messages.push({ role: 'user', content: text });
+  // Benutzer-Nachricht hinzufügen
+  messages.push({ role: 'user', content: userMessage });
   chatInput.value = '';
   isLoading = true;
   renderMessages();
@@ -77,10 +99,14 @@ async function sendMessage() {
   loadingIndicator.style.display = 'block';
 
   try {
-    const response = await sendOpenAIRequest(text);
-    messages.push({ role: 'assistant', content: response });
+    // API-Aufruf
+    const botReply = await sendMessage(userMessage);
+    messages.push({ role: 'assistant', content: botReply });
   } catch (error) {
-    messages.push({ role: 'assistant', content: 'Es ist ein Fehler aufgetreten.' });
+    messages.push({
+      role: 'assistant',
+      content: 'Es gab ein Problem beim Abrufen der Antwort. Bitte versuchen Sie es später erneut.',
+    });
   } finally {
     isLoading = false;
     renderMessages();
@@ -88,15 +114,6 @@ async function sendMessage() {
     loadingIndicator.style.display = 'none';
   }
 }
-
-// Simulate OpenAI API request
-// async function sendOpenAIRequest(message) {
-//  return new Promise((resolve) => {
-//    setTimeout(() => {
-//      resolve('Dies ist eine Beispielantwort des Chatbots.');
-//    }, 1000);
-//  });
-// }
 
 // Refresh the chat
 function refreshChat() {
@@ -123,10 +140,10 @@ function initChat() {
   }
 
   // Initialize event listeners
-  sendButton.addEventListener('click', sendMessage);
+  sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      sendMessage();
+      sendUserMessage();
     }
   });
   refreshButton.addEventListener('click', refreshChat);
