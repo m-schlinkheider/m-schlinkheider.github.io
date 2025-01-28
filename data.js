@@ -3,7 +3,8 @@ const personalData = {
     name: 'Marcel Schlinkheider',
     description: 'Bitte ohne Schnick Schnack.',
     profileImage: 'assets/bild_linkedin.jpg', // Pfad zu Ihrem Profilbild
-    ImageVari: 'assets/Marcel_Auschnitt-rund.png'
+    ImageVari: 'assets/Marcel_Auschnitt-rund.png',
+    OpenAIApiKey: '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'
 };
 
 // Kontaktinformationen
