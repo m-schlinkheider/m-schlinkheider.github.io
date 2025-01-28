@@ -17,6 +17,10 @@ const suggestions = [
   
   // Render messages dynamically
   function renderMessages() {
+    if (!chatBox) {
+      console.error('Element mit der ID "chat-box" wurde nicht gefunden.');
+      return;
+    }
     chatBox.innerHTML = '';
     messages.forEach((message) => {
       const messageElement = document.createElement('div');
