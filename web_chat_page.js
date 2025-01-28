@@ -13,7 +13,7 @@ let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refr
 
 // Funktion zum Senden von Nachrichten an OpenAI
 async function sendMessage(message) {
-  const apiKey = '<YOUR_API_KEY>'; // Ersetze dies mit deinem OpenAI-API-Schlüssel
+  const apiKey = personalData.OpenAIApiKey; // Ersetze dies mit deinem OpenAI-API-Schlüssel
   const url = 'https://api.openai.com/v1/chat/completions';
 
   const headers = {
