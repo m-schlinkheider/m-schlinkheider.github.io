@@ -123,8 +123,9 @@ const suggestions = [
     const chatBox = document.getElementById('chat-box');
     const sendButton = document.getElementById('send-button');
     const chatInput = document.getElementById('chat-input');
+    const refreshButton = document.getElementById('refresh-button');
   
-    if (!chatBox || !sendButton || !chatInput) {
+    if (!chatBox || !sendButton || !chatInput || !refreshButton) {
       console.error('Ein oder mehrere notwendige Elemente fehlen im DOM.');
       return;
     }   
