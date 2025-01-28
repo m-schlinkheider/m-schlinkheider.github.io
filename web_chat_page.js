@@ -34,16 +34,25 @@ const suggestions = [
   // Render suggestions dynamically
   function renderSuggestions() {
     const suggestionsContainer = document.getElementById('suggestions');
+    if (!suggestionsContainer) {
+      console.error('Element mit der ID "suggestions" wurde nicht gefunden.');
+      return;
+    }
     suggestionsContainer.innerHTML = '';
     if (showSuggestions) {
       suggestions.forEach((suggestion) => {
         const suggestionButton = document.createElement('button');
         suggestionButton.textContent = suggestion;
         suggestionButton.className = 'suggestion';
-        suggestionButton.onclick = () => {
+        suggestionButton.addEventListener('click', () => {
+          const chatInput = document.getElementById('chat-input');
+          if (!chatInput) {
+            console.error('Element mit der ID "chat-input" wurde nicht gefunden.');
+            return;
+          }
           chatInput.value = suggestion;
           sendMessage();
-        };
+        });
         suggestionsContainer.appendChild(suggestionButton);
       });
     } else {
@@ -110,6 +119,14 @@ const suggestions = [
   }
   
   // Run the chat initialization
-  document.addEventListener('DOMContentLoaded', () => {  
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatBox = document.getElementById('chat-box');
+    const sendButton = document.getElementById('send-button');
+    const chatInput = document.getElementById('chat-input');
+  
+    if (!chatBox || !sendButton || !chatInput) {
+      console.error('Ein oder mehrere notwendige Elemente fehlen im DOM.');
+      return;
+    }   
   initChat();
 });
