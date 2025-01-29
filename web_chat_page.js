@@ -13,7 +13,8 @@ let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refr
 
 // Funktion zum Senden von Nachrichten an OpenAI
 async function sendMessage(message) {
-  const apiKey = personalData.OpenAIApiKey; // Ersetze dies mit deinem OpenAI-API-Schlüssel
+  require('dotenv').config();
+  const apiKey = process.env.OPENAI_API_KEY; // Ersetze dies mit deinem OpenAI-API-Schlüssel
   const url = 'https://api.openai.com/v1/chat/completions';
 
   const headers = {
@@ -22,7 +23,7 @@ async function sendMessage(message) {
   };
 
   const body = JSON.stringify({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4o',
     messages: [
       {
         role: 'system',
