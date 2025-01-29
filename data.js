@@ -4,7 +4,6 @@ const personalData = {
     description: 'Bitte ohne Schnick Schnack.',
     profileImage: 'assets/bild_linkedin.jpg', // Pfad zu Ihrem Profilbild
     ImageVari: 'assets/Marcel_Auschnitt-rund.png',
-    OpenAIApiKey: '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'
 };
 
 // Kontaktinformationen
