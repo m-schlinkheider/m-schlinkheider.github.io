@@ -37,6 +37,19 @@ let loadingIndicator;
  * 2) Hängt es ins document.body
  */
 function createDOMStructure() {
+    // Prüfe, ob der Chat-Tab aktiv ist
+    if (document.getElementById('chat-container')) {
+      console.log('Chat-Fenster existiert bereits, wird nicht erneut erstellt.');
+      return; // Falls das Chat-Fenster bereits existiert, nicht erneut erzeugen
+    }
+  
+    // Haupt-Container nur im Chat-Bereich erstellen
+    const chatTab = document.getElementById('chat'); // ID des Chat-Tabs
+    if (!chatTab) {
+      console.log('Chat-Tab nicht gefunden, kein Chat wird erstellt.');
+      return; // Falls der Chat-Tab nicht existiert, brich die Funktion ab
+    }
+
   // Haupt-Container
   container = document.createElement('div');
   container.id = 'chat-container';
@@ -257,6 +270,12 @@ function refreshChat() {
  * Haupt-Init
  */
 function initChat() {
+  const chatTab = document.getElementById('chat');
+  if (!chatTab) {
+    console.log('Chat-Tab ist nicht aktiv, Chat wird nicht geladen.');
+    return; // Falls wir nicht im Chat-Bereich sind, abbrechen
+  }
+
   createDOMStructure();
 
   // Eventlistener
