@@ -1,82 +1,94 @@
-// MarcelGPT Chat Implementation for Web
+//
+// web_chat_page.js – für GitHub Pages + Cloudflare Worker-Proxy
+//
+
+// Vorschlags-Buttons, die für den Nutzer angezeigt werden:
 const suggestions = [
   'Erzählen Sie mir etwas über sich.',
   'Was sind Ihre Stärken?',
   'Wie gehen Sie mit Stress um?',
 ];
 
-let messages = []; // Stores messages as {role: 'user' or 'assistant', content: '...'}
+// Interne Chat-Daten
+let messages = []; // Speichert { role: 'user' | 'assistant', content: '...' }
 let isLoading = false;
 let showSuggestions = true;
 
+// Hier trägst du die URL deines Cloudflare-Workers ein:
+const WORKER_URL = 'https://dein-cloudflare-worker.workers.dev'; 
+
+// DOM-Elemente (werden in initChat() belegt)
 let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refreshButton;
 
-// Funktion zum Senden von Nachrichten an OpenAI
-async function sendMessage(message) {
-  require('dotenv').config();
-  const apiKey = process.env.OPENAI_API_KEY; // Ersetze dies mit deinem OpenAI-API-Schlüssel
-  const url = 'https://api.openai.com/v1/chat/completions';
-
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${apiKey}`,
-  };
-
-  const body = JSON.stringify({
-    model: 'gpt-4o',
+/**
+ * Sendet eine Nachricht an den Cloudflare-Worker
+ * (oder eine andere Proxy-URL), der den API-Key
+ * versteckt an OpenAI weiterleitet.
+ * 
+ * @param {string} userMessage – Nachricht, die der Nutzer eingibt
+ * @returns {string} – Antwort des Chatbots
+ */
+async function sendMessageToWorker(userMessage) {
+  // Request-Body, den der Worker später an OpenAI sendet:
+  const body = {
+    model: 'gpt-4o', // Oder 'gpt-3.5-turbo', falls gpt-4o nicht freigeschaltet
     messages: [
       {
         role: 'system',
-        content:
-          'Du bist Marcel Schlinkheider. Antworte auf Anfragen, als würdest du die Fragen selbst beantworten, und gebe dabei die gleiche Perspektive und den gleichen Ton wieder, den die Person verwenden würde.',
+        content: 'Du bist Marcel Schlinkheider. Antworte auf Anfragen, als würdest du die Fragen selbst beantworten, und gebe dabei die gleiche Perspektive und den gleichen Ton wieder, den die Person verwenden würde.',
       },
-      { role: 'user', content: message },
+      { role: 'user', content: userMessage },
     ],
     max_tokens: 150,
-    n: 1,
-    stop: null,
     temperature: 0.7,
-  });
+  };
 
-  console.log('API Key:', apiKey);
-  console.log('URL:', url);
-  console.log('Headers:', headers);
-  console.log('Request Body:', body);  
+  console.log('Proxy-URL:', WORKER_URL);
+  console.log('Request Body für Worker:', body);
 
   try {
-    const response = await fetch(url, {
+    // Statt direkt an api.openai.com → an den Worker
+    const response = await fetch(WORKER_URL, {
       method: 'POST',
-      headers: headers,
-      body: body,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
 
-    if (response.ok) {
-      const jsonResponse = await response.json();
-      return jsonResponse.choices[0].message.content.trim();
-    } else {
-      throw new Error(`Fehler bei der OpenAI API Anfrage: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Fehler-Antwort vom Worker:', errorText);
+      throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
     }
+
+    // Der Worker gibt uns das OpenAI-Resultat zurück
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Fehler beim Aufruf des Workers:', error);
     throw error;
   }
 }
 
-// Render messages dynamically
+/**
+ * Aktualisiert die Chatbox (DOM) anhand der "messages"-Liste
+ */
 function renderMessages() {
-  chatBox.innerHTML = ''; // Clear existing messages
-  messages.forEach((message) => {
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${message.role}`;
-    messageElement.textContent = message.content;
-    chatBox.appendChild(messageElement);
+  chatBox.innerHTML = ''; // Vorherige Nachrichten entfernen
+  messages.forEach((msg) => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${msg.role}`;
+    messageDiv.textContent = msg.content;
+    chatBox.appendChild(messageDiv);
   });
+  // Nach unten scrollen
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Render suggestions dynamically
+/**
+ * Zeigt/hidet die Vorschläge als Buttons
+ */
 function renderSuggestions() {
-  suggestionsContainer.innerHTML = ''; // Clear existing suggestions
+  suggestionsContainer.innerHTML = '';
   if (showSuggestions) {
     suggestions.forEach((suggestion) => {
       const suggestionButton = document.createElement('button');
@@ -91,12 +103,15 @@ function renderSuggestions() {
   }
 }
 
-// Send user message and handle bot response
+/**
+ * Sendet die Nutzernachricht zum Worker, erhält die Antwort
+ * und aktualisiert das UI
+ */
 async function sendUserMessage() {
   const userMessage = chatInput.value.trim();
   if (!userMessage || isLoading) return;
 
-  // Benutzer-Nachricht hinzufügen
+  // Nutzer-Eingabe in Array ablegen
   messages.push({ role: 'user', content: userMessage });
   chatInput.value = '';
   isLoading = true;
@@ -105,10 +120,11 @@ async function sendUserMessage() {
   loadingIndicator.style.display = 'block';
 
   try {
-    // API-Aufruf
-    const botReply = await sendMessage(userMessage);
+    // Hier rufen wir unseren Worker an, NICHT OpenAI direkt
+    const botReply = await sendMessageToWorker(userMessage);
     messages.push({ role: 'assistant', content: botReply });
   } catch (error) {
+    // Bei Fehler: Bot gibt Fehlermeldung aus
     messages.push({
       role: 'assistant',
       content: 'Es gab ein Problem beim Abrufen der Antwort. Bitte versuchen Sie es später erneut.',
@@ -121,7 +137,9 @@ async function sendUserMessage() {
   }
 }
 
-// Refresh the chat
+/**
+ * Setzt den Chat zurück (Nachrichten löschen, Vorschläge wieder anzeigen)
+ */
 function refreshChat() {
   messages = [];
   showSuggestions = true;
@@ -129,9 +147,10 @@ function refreshChat() {
   renderSuggestions();
 }
 
-// Initialize the chat UI
+/**
+ * Initialisiert den Chat: DOM-Elemente holen, Events binden
+ */
 function initChat() {
-  // Assign global elements
   chatInput = document.getElementById('chat-input');
   sendButton = document.getElementById('send-button');
   chatBox = document.getElementById('chat-box');
@@ -139,13 +158,12 @@ function initChat() {
   loadingIndicator = document.getElementById('loading-indicator');
   refreshButton = document.getElementById('refresh-button');
 
-  // Check if all elements are available
   if (!chatInput || !sendButton || !chatBox || !suggestionsContainer || !loadingIndicator || !refreshButton) {
     console.error('Ein oder mehrere notwendige Elemente fehlen im DOM.');
     return;
   }
 
-  // Initialize event listeners
+  // Eventlistener
   sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -154,12 +172,13 @@ function initChat() {
   });
   refreshButton.addEventListener('click', refreshChat);
 
-  // Initial render
+  // Erster Render
   renderMessages();
   renderSuggestions();
 }
 
-// Run the chat initialization
+// Wenn das DOM geladen ist, Chat starten
 document.addEventListener('DOMContentLoaded', () => {
   initChat();
 });
+    
