@@ -74,24 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
                 case 'chat':
                     sectionContent = `
-                    <section class="chat-container">
-                        <div class="chat-header">
-                            <div class="header-content">
-                                <img src="assets/Marcel_Ausschnitt-rund.png" alt="Avatar" class="header-avatar" />
-                                <span class="header-title">MarcelGPT</span>
-                            </div>
-                            <button id="refresh-button" class="refresh-button">🔄</button>
-                        </div>
-                        <div id="chat-box" class="chat-box"></div>
-                        <div id="suggestions" class="suggestions"></div>
-                        <div id="loading-indicator" class="loading-indicator" style="display: none;">
-                            <span class="spinner"></span>
-                        </div>
-                        <div class="chat-footer">
-                            <input id="chat-input" class="chat-input" placeholder="Nachricht eingeben..." />
-                            <button id="send-button" class="chat-send-button">Senden</button>
-                        </div>
-                    </section>
                 `;
                     break;    
         }
