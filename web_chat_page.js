@@ -203,7 +203,7 @@ function renderMessages() {
                <span class="dot"></span>
                <span class="dot"></span>
              </div>
-             <small class="typing-label">MarcelGPT tippt …</small>
+             <small class="typing-label">MarcelGPT überlegt …</small>
            `;
            chatBox.appendChild(typingDiv);
       return; // So dass wir unten nicht mit normalem role weitermachen
