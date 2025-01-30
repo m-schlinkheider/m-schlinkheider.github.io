@@ -857,15 +857,15 @@ a:hover {
     margin-top: 15px;
   }
   .suggestion {
-    background-color: #007bff;
-    color: white;
+    background-color: #FFFFFF;
+    color: black;
     padding: 8px 12px;
     border-radius: 20px;
     border: none;
     cursor: pointer;
   }
   .suggestion:hover {
-    background-color: #0056b3;
+    background-color: #F9F9F9;
   }
   
   /* Input Container */
