@@ -1,28 +1,113 @@
 //
-// web_chat_page.js – OpenAI-Chat für GitHub Pages mit Cloudflare Worker
+// web_chat_page.js – ALLES dynamisch, nur leere index.html + <script> braucht es!
 //
 
-// Vorschläge
+/** Vorschläge für den Start */
 const suggestions = [
   'Erzählen Sie mir etwas über sich.',
   'Was sind Ihre Stärken?',
   'Wie gehen Sie mit Stress um?',
 ];
 
-// Proxy-URL deines Cloudflare Workers
+/** Deine Cloudflare-Worker-URL */
 const WORKER_URL = 'https://openaiproxy.dj-marcel-s.workers.dev/';
 
-// Variablen
+// Globale Variablen
 let messages = [];
 let isLoading = false;
 let chatInitialized = false;
+let showSuggestions = true;
 
-// DOM-Elemente
-let chatContainer, chatBox, suggestionsContainer, inputContainer;
-let chatInput, sendButton, loadingIndicator, refreshButton;
+// DOM-Variablen
+let container;            // äußerster Container
+let chatHeader;           // Kopfzeile
+let headerContent;        
+let headerAvatar;         
+let headerTitle;          
+let refreshButton;        
+let chatBox;              // Nachrichtenbereich
+let suggestionsDiv;       // Vorschläge
+let inputContainer;       
+let chatInput;            
+let sendButton;           
+let loadingIndicator;      
 
 /**
- * Sendet eine Nachricht über den Cloudflare Worker an OpenAI
+ * 1) Erzeugt das komplette Layout per createElement
+ * 2) Hängt es ins document.body
+ */
+function createDOMStructure() {
+  // Haupt-Container
+  container = document.createElement('div');
+  container.id = 'chat-container';
+  document.body.appendChild(container);
+
+  // Header
+  chatHeader = document.createElement('div');
+  chatHeader.className = 'chat-header';
+  container.appendChild(chatHeader);
+
+  // Header-Content (Avatar + Titel)
+  headerContent = document.createElement('div');
+  headerContent.className = 'header-content';
+  chatHeader.appendChild(headerContent);
+
+  headerAvatar = document.createElement('img');
+  headerAvatar.className = 'header-avatar';
+  // Setze ein passendes Bild oder `assets/Marcel_Ausschnitt-rund.png`
+  headerAvatar.src = 'assets/Marcel_Ausschnitt-rund.png';
+  headerContent.appendChild(headerAvatar);
+
+  headerTitle = document.createElement('span');
+  headerTitle.className = 'header-title';
+  headerTitle.textContent = 'MarcelGPT';
+  headerContent.appendChild(headerTitle);
+
+  // Refresh-Button
+  refreshButton = document.createElement('button');
+  refreshButton.className = 'refresh-button';
+  refreshButton.textContent = '⟳';
+  chatHeader.appendChild(refreshButton);
+
+  // Chat-Box
+  chatBox = document.createElement('div');
+  chatBox.className = 'chat-box';
+  container.appendChild(chatBox);
+
+  // Vorschläge
+  suggestionsDiv = document.createElement('div');
+  suggestionsDiv.className = 'suggestions';
+  container.appendChild(suggestionsDiv);
+
+  // Input-Container
+  inputContainer = document.createElement('div');
+  inputContainer.className = 'input-container';
+  container.appendChild(inputContainer);
+
+  // Input
+  chatInput = document.createElement('input');
+  chatInput.type = 'text';
+  chatInput.placeholder = 'Nachricht eingeben...';
+  chatInput.className = 'chat-input';
+  inputContainer.appendChild(chatInput);
+
+  // Send-Button
+  sendButton = document.createElement('button');
+  sendButton.className = 'chat-send-button';
+  sendButton.textContent = 'Senden';
+  inputContainer.appendChild(sendButton);
+
+  // Loading
+  loadingIndicator = document.createElement('div');
+  loadingIndicator.className = 'loading-indicator';
+  loadingIndicator.style.display = 'none';
+  loadingIndicator.textContent = 'Lädt...';
+  container.appendChild(loadingIndicator);
+}
+
+/**
+ * Ruft deinen Cloudflare-Worker auf,
+ * der die Anfrage an OpenAI weiterleitet
  */
 async function sendMessageToWorker(userMessage) {
   const body = {
@@ -73,41 +158,40 @@ async function sendMessageToWorker(userMessage) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Fehler vom Worker:', errorText);
-      throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
+      const txt = await response.text();
+      console.error('Fehler vom Worker:', txt);
+      throw new Error(`Fehler: ${response.status}`);
     }
 
     const data = await response.json();
     return data.choices[0].message.content.trim();
   } catch (error) {
-    console.error('Fehler beim Abrufen:', error);
-    return 'Es gab ein Problem. Bitte später erneut versuchen.';
+    console.error('Fehler Worker:', error);
+    return 'Entschuldigung, es gab ein Problem.';
   }
 }
 
 /**
- * Aktualisiert den Chat-Bereich mit den Nachrichten
+ * Rendert die Nachrichten in chatBox
  */
 function renderMessages() {
-  chatBox.innerHTML = ''; // Vorherige Nachrichten entfernen
+  chatBox.innerHTML = '';
   messages.forEach((msg) => {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${msg.role}`;
-    msgDiv.textContent = msg.content;
-    chatBox.appendChild(msgDiv);
+    const div = document.createElement('div');
+    div.className = `message ${msg.role}`;
+    div.textContent = msg.content;
+    chatBox.appendChild(div);
   });
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 /**
- * Zeigt Vorschläge an (beim Start), danach nicht mehr
+ * Erzeugt Vorschläge (nur solange !chatInitialized)
  */
 function renderSuggestions() {
-  suggestionsContainer.innerHTML = '';
-  if (!chatInitialized) {
+  suggestionsDiv.innerHTML = '';
+  if (!chatInitialized && showSuggestions) {
     suggestions.forEach((text) => {
       const btn = document.createElement('button');
       btn.className = 'suggestion';
@@ -116,42 +200,40 @@ function renderSuggestions() {
         chatInput.value = text;
         sendUserMessage();
       });
-      suggestionsContainer.appendChild(btn);
+      suggestionsDiv.appendChild(btn);
     });
   }
 }
 
 /**
- * Ändert das Layout nach der ersten Eingabe
+ * Wechselt Layout, wenn erste Nachricht gesendet wird
  */
 function startChatLayout() {
   chatInitialized = true;
-  chatContainer.classList.add('chat-started');
-  suggestionsContainer.style.display = 'none';
+  container.classList.add('chat-started');
+  suggestionsDiv.style.display = 'none';
 }
 
 /**
- * Sendet eine Nachricht und erhält die Antwort
+ * Sendet User-Eingabe => Worker => Antwort
  */
 async function sendUserMessage() {
-  const userMessage = chatInput.value.trim();
-  if (!userMessage || isLoading) return;
+  const userText = chatInput.value.trim();
+  if (!userText || isLoading) return;
 
   if (!chatInitialized) {
     startChatLayout();
   }
 
-  messages.push({ role: 'user', content: userMessage });
+  messages.push({ role: 'user', content: userText });
   chatInput.value = '';
   isLoading = true;
   renderMessages();
   loadingIndicator.style.display = 'block';
 
   try {
-    const botReply = await sendMessageToWorker(userMessage);
-    messages.push({ role: 'assistant', content: botReply });
-  } catch (error) {
-    messages.push({ role: 'assistant', content: 'Es gab ein Problem. Bitte später erneut versuchen.' });
+    const reply = await sendMessageToWorker(userText);
+    messages.push({ role: 'assistant', content: reply });
   } finally {
     isLoading = false;
     renderMessages();
@@ -160,35 +242,24 @@ async function sendUserMessage() {
 }
 
 /**
- * Setzt den Chat zurück
+ * Setzt alles zurück
  */
 function refreshChat() {
   messages = [];
   chatInitialized = false;
-  chatContainer.classList.remove('chat-started');
-  suggestionsContainer.style.display = 'flex';
+  container.classList.remove('chat-started');
+  suggestionsDiv.style.display = 'flex';
   renderMessages();
   renderSuggestions();
 }
 
 /**
- * Initialisiert den Chat
+ * Haupt-Init
  */
 function initChat() {
-  chatContainer = document.getElementById('chat-container');
-  chatBox = document.getElementById('chat-box');
-  suggestionsContainer = document.getElementById('suggestions');
-  inputContainer = document.getElementById('input-container');
-  chatInput = document.getElementById('chat-input');
-  sendButton = document.getElementById('send-button');
-  loadingIndicator = document.getElementById('loading-indicator');
-  refreshButton = document.getElementById('refresh-button');
+  createDOMStructure();
 
-  if (!chatContainer || !chatBox || !suggestionsContainer || !inputContainer || !chatInput || !sendButton || !loadingIndicator || !refreshButton) {
-    console.error('Fehler: Mindestens ein Element fehlt im DOM');
-    return;
-  }
-
+  // Eventlistener
   sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendUserMessage();
@@ -199,5 +270,5 @@ function initChat() {
   renderSuggestions();
 }
 
-// Chat starten, wenn DOM geladen
+// DOMContentLoaded
 document.addEventListener('DOMContentLoaded', initChat);
