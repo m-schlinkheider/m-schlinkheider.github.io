@@ -53,7 +53,7 @@ function createDOMStructure() {
   // Haupt-Container
   container = document.createElement('div');
   container.id = 'chat-container';
-  document.body.appendChild(container);
+  chatTab.appendChild(container);
 
   // Header
   chatHeader = document.createElement('div');
