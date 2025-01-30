@@ -1,40 +1,43 @@
 //
-// web_chat_page.js – ALLES geschieht hier
-//    1) DOM-Elemente erzeugen
-//    2) Chat (OpenAI-ähnliches Layout)
-//    3) Worker-Aufrufe
+// web_chat_page.js – Fix mit Header + Layout
 //
 
-/** Vorschlags-Buttons (nur als Demo) */
 const suggestions = [
   'Erzählen Sie mir etwas über sich.',
   'Was sind Ihre Stärken?',
   'Wie gehen Sie mit Stress um?',
 ];
 
-/** URL deines Cloudflare-Workers */
 const WORKER_URL = 'https://openaiproxy.dj-marcel-s.workers.dev/';
 
-// Interne Chat-Daten
 let messages = [];
 let isLoading = false;
 let showSuggestions = true;
 let chatInitialized = false;
 
-// DOM-Variablen (wird alles dynamisch erzeugt)
-let chatContainer, chatBox, suggestionsContainer, inputContainer;
+let chatContainer, chatHeader, chatBox, suggestionsContainer, inputContainer;
 let chatInput, sendButton, loadingIndicator, refreshButton;
 
-/** 
- * Erzeugt dynamisch ALLE benötigten DOM-Elemente
- * und hängt sie ans <body>.
+/**
+ * Erstellt ALLE DOM-Elemente für den Chat
  */
 function createDOMStructure() {
   // Hauptcontainer
   chatContainer = document.createElement('div');
   chatContainer.id = 'chat-container';
-  // Anfänglich keine Klasse 'chat-started', kommt erst später
   document.body.appendChild(chatContainer);
+
+  // Header mit Avatar
+  chatHeader = document.createElement('div');
+  chatHeader.id = 'chat-header';
+  chatHeader.innerHTML = `
+    <div class="header-content">
+      <img src="assets/Marcel_Ausschnitt-rund.png" class="header-avatar" alt="Avatar">
+      <span class="header-title">MarcelGPT</span>
+    </div>
+    <button id="refresh-button" class="refresh-button">⟳</button>
+  `;
+  chatContainer.appendChild(chatHeader);
 
   // Chat-Verlauf
   chatBox = document.createElement('div');
@@ -70,17 +73,10 @@ function createDOMStructure() {
   loadingIndicator.style.display = 'none';
   loadingIndicator.textContent = 'Lädt...';
   chatContainer.appendChild(loadingIndicator);
-
-  // Refresh-Button
-  refreshButton = document.createElement('button');
-  refreshButton.id = 'refresh-button';
-  refreshButton.textContent = 'Neu starten';
-  chatContainer.appendChild(refreshButton);
 }
 
 /**
- * Sendet eine Nachricht an den Cloudflare-Worker,
- * der sie an OpenAI weiterleitet.
+ * Sendet eine Nachricht an den Cloudflare-Worker
  */
 async function sendMessageToWorker(userMessage) {
   const body = {
@@ -125,7 +121,7 @@ async function sendMessageToWorker(userMessage) {
   };
 
   console.log('Proxy-URL:', WORKER_URL);
-  console.log('Request Body für Worker:', body);
+  console.log('Request Body:', body);
 
   const response = await fetch(WORKER_URL, {
     method: 'POST',
@@ -135,7 +131,7 @@ async function sendMessageToWorker(userMessage) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Fehler-Antwort vom Worker:', errorText);
+    console.error('Fehler vom Worker:', errorText);
     throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
   }
   const data = await response.json();
@@ -143,7 +139,7 @@ async function sendMessageToWorker(userMessage) {
 }
 
 /**
- * Baut die Nachrichten (messages) in chatBox ein.
+ * Baut die Nachrichten im Chat-Verlauf auf
  */
 function renderMessages() {
   chatBox.innerHTML = '';
@@ -157,7 +153,7 @@ function renderMessages() {
 }
 
 /**
- * Erzeugt/entfernt Vorschläge-Buttons
+ * Zeigt Vorschläge als Buttons oder entfernt sie
  */
 function renderSuggestions() {
   suggestionsContainer.innerHTML = '';
@@ -176,24 +172,21 @@ function renderSuggestions() {
 }
 
 /**
- * Nach 1. Nachricht => Layout anpassen (OpenAI-Style)
+ * Nach erster Nachricht Layout umschalten
  */
 function startChatLayout() {
   chatInitialized = true;
-  // Klasse .chat-started hinzufügen => im CSS definieren
   chatContainer.classList.add('chat-started');
-  // Vorschläge ausblenden
   suggestionsContainer.style.display = 'none';
 }
 
 /**
- * Chat-Flow: User gibt ein -> wir schicken an Worker
+ * Verarbeitung der Nutzereingabe
  */
 async function sendUserMessage() {
   const userMessage = chatInput.value.trim();
   if (!userMessage || isLoading) return;
 
-  // Layout umschalten, wenn erste Nachricht gesendet wird
   if (!chatInitialized) {
     startChatLayout();
   }
@@ -217,13 +210,12 @@ async function sendUserMessage() {
 }
 
 /**
- * Setzt alles zurück
+ * Setzt den Chat zurück
  */
 function refreshChat() {
   messages = [];
   showSuggestions = true;
   chatInitialized = false;
-  // Layout zurückschalten
   chatContainer.classList.remove('chat-started');
   suggestionsContainer.style.display = 'flex';
   renderMessages();
@@ -231,33 +223,22 @@ function refreshChat() {
 }
 
 /**
- * Hauptinitialisierung
+ * Initialisiert den Chat
  */
 function initChat() {
-  // 1) Alles in DOM erzeugen
   createDOMStructure();
 
-  // 2) Dom-Elemente "auslesen" (nur nötig, wenn du Variablen brauchst)
-  //   (WIR haben sie oben als globale, ist hier optional)
-  // check ob wir sie haben
-  if (!chatContainer || !chatBox || !suggestionsContainer || !chatInput || !sendButton || !loadingIndicator || !refreshButton) {
-    console.error('Fehler: Irgendwas ist nicht erzeugt worden');
-    return;
-  }
-
-  // 3) Eventlistener
   sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       sendUserMessage();
     }
   });
-  refreshButton.addEventListener('click', refreshChat);
 
-  // 4) Erstes Rendern
+  document.getElementById('refresh-button').addEventListener('click', refreshChat);
   renderMessages();
   renderSuggestions();
 }
 
-// Start, sobald DOM geladen
+// Starte den Chat, wenn die Seite geladen ist
 document.addEventListener('DOMContentLoaded', initChat);

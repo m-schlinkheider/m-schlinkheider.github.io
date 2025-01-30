@@ -766,122 +766,74 @@ a:hover {
     padding: 20px;      /* Innenabstand */
 }
 
-/* 
-   Da du sagst, dein Chat war im Container .chat-container 
-   mit fixem Layout, ersetzen wir das durch
-   anfangs vertical zentriert => .chat-started => normal 
-*/
-
-/* Anfangszustand: Voller Viewport, zentriert */
+/* Chat-Container */
 #chat-container {
     display: flex;
     flex-direction: column;
-    justify-content: center; 
     align-items: center;
-    height: 100vh; 
-    text-align: center;
-    transition: all 0.5s ease-in-out; 
-    margin: 0 auto;
+    justify-content: center;
+    height: 100vh;
     max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    transition: all 0.5s ease-in-out;
   }
   
-  /* Nach erstem Input: normaler Chat-Flow => oben ansetzen */
-  #chat-container.chat-started {
-    justify-content: flex-start;
-    height: auto;
-    padding-top: 20px;
+  /* Header mit Avatar */
+  #chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 16px;
+  }
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .header-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 12px;
+  }
+  
+  .header-title {
+    font-size: 1.5rem;
+    font-weight: bold;
   }
   
   /* Chat-Verlauf */
   #chat-box {
-    width: 100%;
     flex: 1;
-    padding: 16px; 
-    background-color: #f8f9fa;
+    width: 100%;
+    padding: 16px;
     overflow-y: auto;
-  }
-  
-  /* Nachrichtenstil */
-  .message {
-    margin-bottom: 12px;
-    padding: 12px;
-    border-radius: 12px;
-    max-width: 75%;
-  }
-  .message.user {
-    background-color: #007bff;
-    color: #fff;
-    align-self: flex-end;
-  }
-  .message.assistant {
-    background-color: #e9ecef;
-    color: #000;
-    align-self: flex-start;
+    background-color: #f8f9fa;
   }
   
   /* Vorschläge */
   #suggestions {
     display: flex;
+    gap: 10px;
     flex-wrap: wrap;
-    justify-content: center;
+    margin-top: 20px;
+  }
+  
+  /* Eingabefeld */
+  #input-container {
+    display: flex;
     gap: 10px;
     margin-top: 20px;
   }
   
-  .suggestion {
-    padding: 8px 16px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
+  #chat-container.chat-started {
+    justify-content: flex-start;
+    height: auto;
+    padding-top: 20px;
   }
-  .suggestion:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Input-Feld + Button (unten) */
-  #input-container {
-    margin-top: 20px;
-  }
-  
-  #chat-input {
-    padding: 8px;
-    font-size: 1rem;
-    margin-right: 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-  }
-  
-  #send-button {
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  #send-button:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Ladeanzeige */
-  #loading-indicator {
-    margin-top: 10px;
-    color: #333;
-  }
-  
-  /* Refresh-Button */
-  #refresh-button {
-    margin-top: 10px;
-    background: #f1f1f1;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-  #refresh-button:hover {
-    background-color: #e0e0e0;
-  }  
   
