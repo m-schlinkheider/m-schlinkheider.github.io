@@ -766,203 +766,122 @@ a:hover {
     padding: 20px;      /* Innenabstand */
 }
 
-/* =========================================
-   BEGINNE MIT DEM NEUEN 'chat-container' 
-   ========================================= */
-   .chat-container {
-    /* Neu: statt fixierter Höhe/Weite setzen wir 
-       Flexbox + zentrierung => anfangs mittig */
+/* 
+   Da du sagst, dein Chat war im Container .chat-container 
+   mit fixem Layout, ersetzen wir das durch
+   anfangs vertical zentriert => .chat-started => normal 
+*/
+
+/* Anfangszustand: Voller Viewport, zentriert */
+#chat-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: center; 
     align-items: center;
-  
-    /* Voller Viewport-Höhe => anfangs chat in der Mitte */
-    height: 100vh;
-  
-    /* Für Text-Zentrierung */
+    height: 100vh; 
     text-align: center;
-  
-    /* Animation/Übergang bei Umschalten => weicher Effekt */
-    transition: all 0.5s ease-in-out;
-  
-    /* OPTIONAL: Wenn du trotzdem eine max-breite + margin willst: */
+    transition: all 0.5s ease-in-out; 
     margin: 0 auto;
     max-width: 800px;
-  
-    /* Möchtest du den alten Rand + Schatten beibehalten? Dann:
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    */
   }
   
-  /* Sobald .chat-container.chat-started hinzukommt (erste Eingabe),
-     soll der Chatcontainer nach oben wandern. */
-  .chat-container.chat-started {
+  /* Nach erstem Input: normaler Chat-Flow => oben ansetzen */
+  #chat-container.chat-started {
     justify-content: flex-start;
-    height: auto;        /* Höhe wird dynamisch vom Inhalt bestimmt */
-    padding-top: 20px;   /* etwas Abstand nach oben */
+    height: auto;
+    padding-top: 20px;
   }
   
-  /* =========================================
-     HEADER / REFRESH BUTTON
-     ========================================= */
-  .chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #007bff;
-    color: white;
-    padding: 16px;
-    font-size: 1.25rem;
-  }
-  
-  .header-content {
-    display: flex;
-    align-items: center;
-  }
-  
-  .header-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 12px;
-  }
-  
-  .header-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-  
-  .refresh-button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.25rem;
-    cursor: pointer;
-  }
-  
-  /* =========================================
-     CHAT-BOX (gespeicherte Nachrichten)
-     ========================================= */
-  .chat-box {
-    /* Neu: Keine fixe Höhe — da wir .chat-container flexibel haben */
+  /* Chat-Verlauf */
+  #chat-box {
+    width: 100%;
     flex: 1;
-    width: 100%;   /* Fülle Container-Breite */
-    padding: 16px;
-    overflow-y: auto;
+    padding: 16px; 
     background-color: #f8f9fa;
+    overflow-y: auto;
   }
   
+  /* Nachrichtenstil */
   .message {
     margin-bottom: 12px;
     padding: 12px;
     border-radius: 12px;
     max-width: 75%;
   }
-  
   .message.user {
     background-color: #007bff;
-    color: white;
+    color: #fff;
     align-self: flex-end;
   }
-  
   .message.assistant {
     background-color: #e9ecef;
-    color: black;
+    color: #000;
     align-self: flex-start;
   }
   
-  /* =========================================
-     VORSCHLÄGE (initial mittig unter Eingabefeld)
-     ========================================= */
-  .suggestions {
+  /* Vorschläge */
+  #suggestions {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    padding: 8px;
-    margin-top: 16px; /* etwas Abstand */
+    gap: 10px;
+    margin-top: 20px;
   }
   
   .suggestion {
-    margin: 5px;
-    padding: 8px 12px;
+    padding: 8px 16px;
     background-color: #007bff;
-    color: white;
+    color: #fff;
     border: none;
     border-radius: 20px;
     cursor: pointer;
   }
-  
   .suggestion:hover {
     background-color: #0056b3;
   }
   
-  /* =========================================
-     LADE-INDIKATOR
-     ========================================= */
-  .loading-indicator {
-    text-align: center;
-    padding: 16px;
+  /* Input-Feld + Button (unten) */
+  #input-container {
+    margin-top: 20px;
   }
   
-  .spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid #007bff;
-    border-top: 3px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  /* =========================================
-     CHAT-FOOTER/EINGABEFELD
-     ========================================= */
-  /* Zuerst soll Eingabefeld mittig sein -> 
-     wir machen das per absolute/fixed positioning 
-     in JavaScript ODER wir lassen es standard. 
-     Wenn du das Eingabefeld lieber unten fixiert hast, 
-     kannst du .chat-footer so lassen, 
-     oder es anpassen an dein Layout. */
-  
-  .chat-footer {
-    display: flex;
-    padding: 12px;
-    border-top: 1px solid #e0e0e0;
-    background-color: white;
-  }
-  
-  .chat-input {
-    flex: 1;
+  #chat-input {
     padding: 8px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
     font-size: 1rem;
     margin-right: 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
   }
   
-  .chat-send-button {
+  #send-button {
     background-color: #007bff;
-    color: white;
+    color: #fff;
     border: none;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
   }
-  
-  .chat-send-button:hover {
+  #send-button:hover {
     background-color: #0056b3;
   }
+  
+  /* Ladeanzeige */
+  #loading-indicator {
+    margin-top: 10px;
+    color: #333;
+  }
+  
+  /* Refresh-Button */
+  #refresh-button {
+    margin-top: 10px;
+    background: #f1f1f1;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  #refresh-button:hover {
+    background-color: #e0e0e0;
+  }  
   
