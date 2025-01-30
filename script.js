@@ -73,8 +73,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 break;
                 case 'chat':
-                    sectionContent = `
-                `;
+                    sectionContent = `<div id="chat"></div>`; // Leer starten
+                    setTimeout(() => initChat(), 100); // Chat-Funktion mit kleinem Delay starten
                     break;    
         }
 
