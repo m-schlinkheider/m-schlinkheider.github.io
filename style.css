@@ -861,8 +861,7 @@ a:hover {
     color: black;
     padding: 8px 12px;
     border-radius: 20px;
-    border: 1px;
-    border: none;
+    border: 1px solid;
     cursor: pointer;
   }
   .suggestion:hover {
