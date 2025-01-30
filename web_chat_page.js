@@ -1,82 +1,29 @@
 //
-// web_chat_page.js – Fix mit Header + Layout
+// web_chat_page.js
+// Nur EIN Header + Chat, anfangs zentriert => nach 1. Nachricht nach oben
 //
 
+// Vorschlags-Buttons
 const suggestions = [
   'Erzählen Sie mir etwas über sich.',
   'Was sind Ihre Stärken?',
   'Wie gehen Sie mit Stress um?',
 ];
 
+// Dein Proxy-URL
 const WORKER_URL = 'https://openaiproxy.dj-marcel-s.workers.dev/';
 
-let messages = [];
+let messages = []; // {role: 'user' | 'assistant', content: '...'}
 let isLoading = false;
 let showSuggestions = true;
 let chatInitialized = false;
 
-let chatContainer, chatHeader, chatBox, suggestionsContainer, inputContainer;
+// DOM-Elemente
+let chatHeader, chatContainer, chatBox, suggestionsContainer, inputContainer;
 let chatInput, sendButton, loadingIndicator, refreshButton;
 
 /**
- * Erstellt ALLE DOM-Elemente für den Chat
- */
-function createDOMStructure() {
-  // Hauptcontainer
-  chatContainer = document.createElement('div');
-  chatContainer.id = 'chat-container';
-  document.body.appendChild(chatContainer);
-
-  // Header mit Avatar
-  chatHeader = document.createElement('div');
-  chatHeader.id = 'chat-header';
-  chatHeader.innerHTML = `
-    <div class="header-content">
-      <img src="assets/Marcel_Ausschnitt-rund.png" class="header-avatar" alt="Avatar">
-      <span class="header-title">MarcelGPT</span>
-    </div>
-    <button id="refresh-button" class="refresh-button">⟳</button>
-  `;
-  chatContainer.appendChild(chatHeader);
-
-  // Chat-Verlauf
-  chatBox = document.createElement('div');
-  chatBox.id = 'chat-box';
-  chatContainer.appendChild(chatBox);
-
-  // Vorschläge
-  suggestionsContainer = document.createElement('div');
-  suggestionsContainer.id = 'suggestions';
-  chatContainer.appendChild(suggestionsContainer);
-
-  // Input-Container
-  inputContainer = document.createElement('div');
-  inputContainer.id = 'input-container';
-  chatContainer.appendChild(inputContainer);
-
-  // Input-Feld
-  chatInput = document.createElement('input');
-  chatInput.type = 'text';
-  chatInput.id = 'chat-input';
-  chatInput.placeholder = 'Nachricht eingeben...';
-  inputContainer.appendChild(chatInput);
-
-  // Senden-Button
-  sendButton = document.createElement('button');
-  sendButton.id = 'send-button';
-  sendButton.textContent = 'Senden';
-  inputContainer.appendChild(sendButton);
-
-  // Ladeanzeige
-  loadingIndicator = document.createElement('div');
-  loadingIndicator.id = 'loading-indicator';
-  loadingIndicator.style.display = 'none';
-  loadingIndicator.textContent = 'Lädt...';
-  chatContainer.appendChild(loadingIndicator);
-}
-
-/**
- * Sendet eine Nachricht an den Cloudflare-Worker
+ * Ruft den Worker auf, der die Anfrage an OpenAI weiterleitet.
  */
 async function sendMessageToWorker(userMessage) {
   const body = {
@@ -131,7 +78,7 @@ async function sendMessageToWorker(userMessage) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Fehler vom Worker:', errorText);
+    console.error('Antwort vom Worker:', errorText);
     throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
   }
   const data = await response.json();
@@ -139,7 +86,7 @@ async function sendMessageToWorker(userMessage) {
 }
 
 /**
- * Baut die Nachrichten im Chat-Verlauf auf
+ * Aktualisiert die Chatbox
  */
 function renderMessages() {
   chatBox.innerHTML = '';
@@ -153,26 +100,26 @@ function renderMessages() {
 }
 
 /**
- * Zeigt Vorschläge als Buttons oder entfernt sie
+ * Zeigt/hidet Vorschläge
  */
 function renderSuggestions() {
   suggestionsContainer.innerHTML = '';
   if (showSuggestions) {
-    suggestions.forEach((sgt) => {
-      const button = document.createElement('button');
-      button.className = 'suggestion';
-      button.textContent = sgt;
-      button.addEventListener('click', () => {
-        chatInput.value = sgt;
+    suggestions.forEach((text) => {
+      const btn = document.createElement('button');
+      btn.className = 'suggestion';
+      btn.textContent = text;
+      btn.addEventListener('click', () => {
+        chatInput.value = text;
         sendUserMessage();
       });
-      suggestionsContainer.appendChild(button);
+      suggestionsContainer.appendChild(btn);
     });
   }
 }
 
 /**
- * Nach erster Nachricht Layout umschalten
+ * Schaltet Layout nach erster Nachricht auf 'chat-started'
  */
 function startChatLayout() {
   chatInitialized = true;
@@ -181,7 +128,7 @@ function startChatLayout() {
 }
 
 /**
- * Verarbeitung der Nutzereingabe
+ * Sendet User-Eingabe => Worker => Antwort => messages
  */
 async function sendUserMessage() {
   const userMessage = chatInput.value.trim();
@@ -201,7 +148,10 @@ async function sendUserMessage() {
     const botReply = await sendMessageToWorker(userMessage);
     messages.push({ role: 'assistant', content: botReply });
   } catch (error) {
-    messages.push({ role: 'assistant', content: 'Es gab ein Problem. Bitte später erneut versuchen.' });
+    messages.push({
+      role: 'assistant',
+      content: 'Es gab ein Problem. Bitte später erneut versuchen.'
+    });
   } finally {
     isLoading = false;
     renderMessages();
@@ -223,22 +173,38 @@ function refreshChat() {
 }
 
 /**
- * Initialisiert den Chat
+ * Init-Funktion, holt DOM-Elemente
  */
 function initChat() {
-  createDOMStructure();
+  // Such in index.html nach IDs
+  chatHeader = document.getElementById('chat-header');
+  chatContainer = document.getElementById('chat-container');
+  chatBox = document.getElementById('chat-box');
+  suggestionsContainer = document.getElementById('suggestions');
+  inputContainer = document.getElementById('input-container');
+  chatInput = document.getElementById('chat-input');
+  sendButton = document.getElementById('send-button');
+  loadingIndicator = document.getElementById('loading-indicator');
+  refreshButton = document.getElementById('refresh-button');
 
+  if (!chatHeader || !chatContainer || !chatBox ||
+      !suggestionsContainer || !inputContainer ||
+      !chatInput || !sendButton || !loadingIndicator || !refreshButton) {
+    console.error('Fehler: Mindestens ein Element fehlt im DOM');
+    return;
+  }
+
+  // Eventlistener
   sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      sendUserMessage();
-    }
+    if (e.key === 'Enter') sendUserMessage();
   });
+  refreshButton.addEventListener('click', refreshChat);
 
-  document.getElementById('refresh-button').addEventListener('click', refreshChat);
+  // 1. Render
   renderMessages();
   renderSuggestions();
 }
 
-// Starte den Chat, wenn die Seite geladen ist
+// Laden
 document.addEventListener('DOMContentLoaded', initChat);

@@ -766,25 +766,30 @@ a:hover {
     padding: 20px;      /* Innenabstand */
 }
 
-/* Chat-Container */
+/* Chat-Container anfangs zentriert */
 #chat-container {
     display: flex;
     flex-direction: column;
+    justify-content: center; 
     align-items: center;
-    justify-content: center;
-    height: 100vh;
-    max-width: 800px;
-    margin: 0 auto;
     text-align: center;
     transition: all 0.5s ease-in-out;
+    min-height: 60vh; /* z.B. anfangs mittig */
   }
   
-  /* Header mit Avatar */
-  #chat-header {
+  /* Nach 1. Nachricht => nach oben */
+  #chat-container.chat-started {
+    justify-content: flex-start;
+    align-items: center;
+    min-height: auto;
+    padding-top: 20px;
+  }
+  
+  /* Header fix? oder normal? Du kannst es so lassen: */
+  .chat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
     background-color: #007bff;
     color: white;
     padding: 16px;
@@ -795,45 +800,65 @@ a:hover {
     align-items: center;
   }
   
-  .header-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 12px;
-  }
-  
-  .header-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-  
-  /* Chat-Verlauf */
+  /* Chatbox */
   #chat-box {
-    flex: 1;
     width: 100%;
+    max-width: 800px;
     padding: 16px;
+    background: #f8f9fa;
     overflow-y: auto;
-    background-color: #f8f9fa;
+  }
+  
+  .message {
+    margin-bottom: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    max-width: 75%;
+  }
+  
+  .message.user {
+    background-color: #007bff;
+    color: #fff;
+    align-self: flex-end;
+  }
+  .message.assistant {
+    background-color: #e9ecef;
+    align-self: flex-start;
   }
   
   /* Vorschläge */
   #suggestions {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
-    margin-top: 20px;
+    justify-content: center;
+    margin-top: 10px;
   }
   
-  /* Eingabefeld */
+  .suggestion {
+    margin: 5px;
+    padding: 8px 12px;
+    background-color: #007bff;
+    border-radius: 20px;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  /* Input-Feld unten im Container */
   #input-container {
-    display: flex;
-    gap: 10px;
     margin-top: 20px;
+    display: flex;
+    gap: 8px;
   }
   
-  #chat-container.chat-started {
-    justify-content: flex-start;
-    height: auto;
-    padding-top: 20px;
+  #loading-indicator {
+    margin-top: 10px;
+    color: #333;
   }
   
+  .refresh-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+  }
