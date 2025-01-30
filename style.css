@@ -766,18 +766,49 @@ a:hover {
     padding: 20px;      /* Innenabstand */
 }
 
-.chat-container {
+/* =========================================
+   BEGINNE MIT DEM NEUEN 'chat-container' 
+   ========================================= */
+   .chat-container {
+    /* Neu: statt fixierter Höhe/Weite setzen wir 
+       Flexbox + zentrierung => anfangs mittig */
     display: flex;
     flex-direction: column;
-    height: 100%;
-    max-width: 800px;
+    justify-content: center;
+    align-items: center;
+  
+    /* Voller Viewport-Höhe => anfangs chat in der Mitte */
+    height: 100vh;
+  
+    /* Für Text-Zentrierung */
+    text-align: center;
+  
+    /* Animation/Übergang bei Umschalten => weicher Effekt */
+    transition: all 0.5s ease-in-out;
+  
+    /* OPTIONAL: Wenn du trotzdem eine max-breite + margin willst: */
     margin: 0 auto;
+    max-width: 800px;
+  
+    /* Möchtest du den alten Rand + Schatten beibehalten? Dann:
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    overflow: hidden;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    */
   }
   
+  /* Sobald .chat-container.chat-started hinzukommt (erste Eingabe),
+     soll der Chatcontainer nach oben wandern. */
+  .chat-container.chat-started {
+    justify-content: flex-start;
+    height: auto;        /* Höhe wird dynamisch vom Inhalt bestimmt */
+    padding-top: 20px;   /* etwas Abstand nach oben */
+  }
+  
+  /* =========================================
+     HEADER / REFRESH BUTTON
+     ========================================= */
   .chat-header {
     display: flex;
     justify-content: space-between;
@@ -813,8 +844,13 @@ a:hover {
     cursor: pointer;
   }
   
+  /* =========================================
+     CHAT-BOX (gespeicherte Nachrichten)
+     ========================================= */
   .chat-box {
+    /* Neu: Keine fixe Höhe — da wir .chat-container flexibel haben */
     flex: 1;
+    width: 100%;   /* Fülle Container-Breite */
     padding: 16px;
     overflow-y: auto;
     background-color: #f8f9fa;
@@ -839,11 +875,15 @@ a:hover {
     align-self: flex-start;
   }
   
+  /* =========================================
+     VORSCHLÄGE (initial mittig unter Eingabefeld)
+     ========================================= */
   .suggestions {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     padding: 8px;
+    margin-top: 16px; /* etwas Abstand */
   }
   
   .suggestion {
@@ -860,6 +900,9 @@ a:hover {
     background-color: #0056b3;
   }
   
+  /* =========================================
+     LADE-INDIKATOR
+     ========================================= */
   .loading-indicator {
     text-align: center;
     padding: 16px;
@@ -882,6 +925,16 @@ a:hover {
       transform: rotate(360deg);
     }
   }
+  
+  /* =========================================
+     CHAT-FOOTER/EINGABEFELD
+     ========================================= */
+  /* Zuerst soll Eingabefeld mittig sein -> 
+     wir machen das per absolute/fixed positioning 
+     in JavaScript ODER wir lassen es standard. 
+     Wenn du das Eingabefeld lieber unten fixiert hast, 
+     kannst du .chat-footer so lassen, 
+     oder es anpassen an dein Layout. */
   
   .chat-footer {
     display: flex;
@@ -912,3 +965,4 @@ a:hover {
   .chat-send-button:hover {
     background-color: #0056b3;
   }
+  
