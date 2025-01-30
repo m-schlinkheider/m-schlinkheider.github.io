@@ -191,6 +191,25 @@ async function sendMessageToWorker(userMessage) {
 function renderMessages() {
   chatBox.innerHTML = '';
   messages.forEach((msg) => {
+       if (msg.role === 'assistant-typing') {
+           // Erzeuge z. B. eine Blase mit 3 animierten Punkten
+           const typingDiv = document.createElement('div');
+           typingDiv.className = 'message typing-bubble';
+      
+           // 3 animierte Punkte
+           typingDiv.innerHTML = `
+           <div class="typing-indicator">
+               <span class="dot"></span>
+               <span class="dot"></span>
+               <span class="dot"></span>
+             </div>
+             <small class="typing-label">MarcelGPT tippt …</small>
+           `;
+           chatBox.appendChild(typingDiv);
+      return; // So dass wir unten nicht mit normalem role weitermachen
+    }
+      
+    // Standard-Fall:
     const div = document.createElement('div');
     div.className = `message ${msg.role}`;
     div.textContent = msg.content;
@@ -242,10 +261,20 @@ async function sendUserMessage() {
   chatInput.value = '';
   isLoading = true;
   renderMessages();
-  loadingIndicator.style.display = 'block';
+  // ZEIGE Tipp-Indikator
+  const typingIndicator = { role: 'assistant-typing', content: '' };
+  messages.push(typingIndicator);
+  renderMessages();
+  loadingIndicator.style.display = 'none';
 
   try {
     const reply = await sendMessageToWorker(userText);
+        // ENTFERNE den Tipp-Indikator
+    const index = messages.findIndex(m => m.role === 'assistant-typing');
+    if (index !== -1) {
+     messages.splice(index, 1);
+    }
+
     messages.push({ role: 'assistant', content: reply });
   } finally {
     isLoading = false;
