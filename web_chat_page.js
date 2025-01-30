@@ -15,7 +15,7 @@ let isLoading = false;
 let showSuggestions = true;
 
 // Hier trägst du die URL deines Cloudflare-Workers ein:
-const WORKER_URL = 'https://dein-cloudflare-worker.workers.dev'; 
+const WORKER_URL = 'https://openaiproxy.dj-marcel-s.workers.dev/'; 
 
 // DOM-Elemente (werden in initChat() belegt)
 let chatInput, sendButton, chatBox, suggestionsContainer, loadingIndicator, refreshButton;
