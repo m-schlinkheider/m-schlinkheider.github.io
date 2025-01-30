@@ -1,29 +1,28 @@
 //
-// web_chat_page.js
-// Nur EIN Header + Chat, anfangs zentriert => nach 1. Nachricht nach oben
+// web_chat_page.js – OpenAI-Chat für GitHub Pages mit Cloudflare Worker
 //
 
-// Vorschlags-Buttons
+// Vorschläge
 const suggestions = [
   'Erzählen Sie mir etwas über sich.',
   'Was sind Ihre Stärken?',
   'Wie gehen Sie mit Stress um?',
 ];
 
-// Dein Proxy-URL
+// Proxy-URL deines Cloudflare Workers
 const WORKER_URL = 'https://openaiproxy.dj-marcel-s.workers.dev/';
 
-let messages = []; // {role: 'user' | 'assistant', content: '...'}
+// Variablen
+let messages = [];
 let isLoading = false;
-let showSuggestions = true;
 let chatInitialized = false;
 
 // DOM-Elemente
-let chatHeader, chatContainer, chatBox, suggestionsContainer, inputContainer;
+let chatContainer, chatBox, suggestionsContainer, inputContainer;
 let chatInput, sendButton, loadingIndicator, refreshButton;
 
 /**
- * Ruft den Worker auf, der die Anfrage an OpenAI weiterleitet.
+ * Sendet eine Nachricht über den Cloudflare Worker an OpenAI
  */
 async function sendMessageToWorker(userMessage) {
   const body = {
@@ -59,8 +58,6 @@ async function sendMessageToWorker(userMessage) {
       { role: 'assistant', content: 'Ein erfolgreiches Projekt, das ich geleitet habe war ein Suchalgorythmus für eine Produktwebseite zu entwickeln die ihre Inhalte in sieben Sprachen komplett auf Basis eines statischen Seitengenerators erstellt. Weitere Informationen dazu finden Sie in meiner App unter dem Punkt \"Projekte\".' },
       { role: 'user', content: 'Was sind deine Hobbys?' },
       { role: 'assistant', content: 'Ich interessiere mich sehr für Basketball und verbringe gerne Zeit in meinem Heimstudio für die Musikproduktion. Besonders an den Wochenenden widme ich mich meinem Hund und verbringe die Zeit gern draußen.' },
-
-      // ... Hier hängt dein userMessage dran
       { role: 'user', content: userMessage },
     ],
     max_tokens: 150,
@@ -70,26 +67,32 @@ async function sendMessageToWorker(userMessage) {
   console.log('Proxy-URL:', WORKER_URL);
   console.log('Request Body:', body);
 
-  const response = await fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Antwort vom Worker:', errorText);
-    throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Fehler vom Worker:', errorText);
+      throw new Error(`Fehler beim Proxy-Aufruf: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('Fehler beim Abrufen:', error);
+    return 'Es gab ein Problem. Bitte später erneut versuchen.';
   }
-  const data = await response.json();
-  return data.choices[0].message.content.trim();
 }
 
 /**
- * Aktualisiert die Chatbox
+ * Aktualisiert den Chat-Bereich mit den Nachrichten
  */
 function renderMessages() {
-  chatBox.innerHTML = '';
+  chatBox.innerHTML = ''; // Vorherige Nachrichten entfernen
   messages.forEach((msg) => {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${msg.role}`;
@@ -100,11 +103,11 @@ function renderMessages() {
 }
 
 /**
- * Zeigt/hidet Vorschläge
+ * Zeigt Vorschläge an (beim Start), danach nicht mehr
  */
 function renderSuggestions() {
   suggestionsContainer.innerHTML = '';
-  if (showSuggestions) {
+  if (!chatInitialized) {
     suggestions.forEach((text) => {
       const btn = document.createElement('button');
       btn.className = 'suggestion';
@@ -119,7 +122,7 @@ function renderSuggestions() {
 }
 
 /**
- * Schaltet Layout nach erster Nachricht auf 'chat-started'
+ * Ändert das Layout nach der ersten Eingabe
  */
 function startChatLayout() {
   chatInitialized = true;
@@ -128,7 +131,7 @@ function startChatLayout() {
 }
 
 /**
- * Sendet User-Eingabe => Worker => Antwort => messages
+ * Sendet eine Nachricht und erhält die Antwort
  */
 async function sendUserMessage() {
   const userMessage = chatInput.value.trim();
@@ -148,10 +151,7 @@ async function sendUserMessage() {
     const botReply = await sendMessageToWorker(userMessage);
     messages.push({ role: 'assistant', content: botReply });
   } catch (error) {
-    messages.push({
-      role: 'assistant',
-      content: 'Es gab ein Problem. Bitte später erneut versuchen.'
-    });
+    messages.push({ role: 'assistant', content: 'Es gab ein Problem. Bitte später erneut versuchen.' });
   } finally {
     isLoading = false;
     renderMessages();
@@ -164,7 +164,6 @@ async function sendUserMessage() {
  */
 function refreshChat() {
   messages = [];
-  showSuggestions = true;
   chatInitialized = false;
   chatContainer.classList.remove('chat-started');
   suggestionsContainer.style.display = 'flex';
@@ -173,11 +172,9 @@ function refreshChat() {
 }
 
 /**
- * Init-Funktion, holt DOM-Elemente
+ * Initialisiert den Chat
  */
 function initChat() {
-  // Such in index.html nach IDs
-  chatHeader = document.getElementById('chat-header');
   chatContainer = document.getElementById('chat-container');
   chatBox = document.getElementById('chat-box');
   suggestionsContainer = document.getElementById('suggestions');
@@ -187,24 +184,20 @@ function initChat() {
   loadingIndicator = document.getElementById('loading-indicator');
   refreshButton = document.getElementById('refresh-button');
 
-  if (!chatHeader || !chatContainer || !chatBox ||
-      !suggestionsContainer || !inputContainer ||
-      !chatInput || !sendButton || !loadingIndicator || !refreshButton) {
+  if (!chatContainer || !chatBox || !suggestionsContainer || !inputContainer || !chatInput || !sendButton || !loadingIndicator || !refreshButton) {
     console.error('Fehler: Mindestens ein Element fehlt im DOM');
     return;
   }
 
-  // Eventlistener
   sendButton.addEventListener('click', sendUserMessage);
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendUserMessage();
   });
   refreshButton.addEventListener('click', refreshChat);
 
-  // 1. Render
   renderMessages();
   renderSuggestions();
 }
 
-// Laden
+// Chat starten, wenn DOM geladen
 document.addEventListener('DOMContentLoaded', initChat);
